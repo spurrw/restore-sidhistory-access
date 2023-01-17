@@ -1,4 +1,5 @@
 == Background ==
+
 Active Directory users have an attribute called SIDHistory. It contains SIDs
 used in domains that users were migrated from during a domain migration. You
 cannot manually write to this value, it can only be set during a domain
@@ -9,6 +10,7 @@ Before doing so I exported all the SIDHistory values that were going to be
 deleted and then deleted this attribute for all users and groups containing it.
 
 == Problem ==
+
 The next day we discover some users can't access files on their network drives.
 They're granted access to these files/folders (which are SUPER old but important)
 because they're being granted access via their old SID from now-dead AD domains.
@@ -21,6 +23,7 @@ the values to make things look "pretty". So I don't have the old SIDs and I
 couldn't restore them even if I did.
 
 == Solution ==
+
 I had to do the following to get people access to their files:
 
 1. Query a backup of NTDS.dit (AD database) from a domain controller to get the
@@ -32,7 +35,9 @@ I had to do the following to get people access to their files:
 This tells you how to do that in case you break things like I did!
 
 ==== Restoring SIDs or other AD Attributes ====
+
 == Query a backup of NTDS.dit ==
+
 I owe this section to this post: https://dxpetti.com/blog/2020/mounting-an-active-directory-database-backup/
 I've shortened the process here.
 
@@ -53,6 +58,7 @@ Remember, don't restore network to a backup of a DC!
 
 
 == Verify Database ==
+
 1. Get ntds.dit and the edb files onto a working domain controller
 2. Commit pending changes from edb files to ntds.dit (if you got the edb files):
     esentutl /r edb
@@ -62,17 +68,20 @@ Remember, don't restore network to a backup of a DC!
     esentutl /p ntds.dit
 
 == Mount Database ==
+
 1. Mount the database for querying and chose a port number to have it listen on (777 in this case):
     dsamain /dbpath ntds.dit /ldapport 777
 2. Open up your firewall (to the extent desired) to allow connections on TCP port 777
 
 == Query Database ==
+
 1. You can now query the old AD database just like any production AD database
     running on your production DCs. You just need to specify a port number to connect to it on:
     Get-ADUser -Identity jeff -Server dc1.contoso.com:777
 
 
 ==== Repairing File ACLs with the Script ====
+
 1. Once you have your deleted SIDs, prepare a data file like formatted like 
     the example datafile "example-missing-sids.txt":
     user1 -------- {SID}
