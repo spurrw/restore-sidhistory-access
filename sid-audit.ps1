@@ -82,11 +82,12 @@ $unidentifiedFSObjects = @() # objects with orphaned SIDs we can't identify
 #ForEach ($f in $fsObjects) {
 Get-ChildItem $fsFolder -Recurse -ErrorAction "Continue" | ForEach-Object {
     try {
+   		$item = get-item -literalpath $_.FullName -ErrorAction "Continue"
         $acl = Get-ACL $_.FullName
-        $aclAccess = $acl.Access
+        $aclAccess = $item.GetAccessControl().Access
     } catch {
         Write-Host "Error: unable to read object ACL $($_)"
-        continue
+#        continue
     }
     $fsObjectCount += 1
     
